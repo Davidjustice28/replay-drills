@@ -1,0 +1,1 @@
+ALTER TABLE "drill_sessions" ALTER COLUMN "date_started" SET DEFAULT now();
