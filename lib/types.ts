@@ -1,10 +1,10 @@
 // data models
-export interface Organization {
+export interface OrganizationModel {
   id: string;
   name: string;
 }
 
-export interface User {
+export interface UserModel {
   id: string;
   organization_id: string;
   name: string;
@@ -13,25 +13,25 @@ export interface User {
   role: 'admin' | 'member'
 }
 
-export interface Drill {
+export interface DrillModel {
   id: string;
   organization_id: string;
   title: string;
   description: string;
-  date_created: string;
-  last_updated: string;
+  date_created: Date;
+  last_updated: Date;
 }
 
-export interface DrillSession {
+export interface DrillSessionModel {
   id: string;
   drill_id: string;
-  date_started: string;
-  date_completed: string | null;
+  date_started: Date;
+  date_completed: Date | null;
   duration: number | null;
   user_id: string;
 }
 
-export interface DrillObjection {
+export interface DrillObjectionModel {
   id: string;
   drill_id: string;
   position: number;
@@ -39,7 +39,7 @@ export interface DrillObjection {
   ideal_response: string;
 }
 
-export interface DrillObjectionAnswer {
+export interface DrillObjectionAnswerModel {
   id: string;
   drill_session_id: string;
   drill_objection_id: string;
