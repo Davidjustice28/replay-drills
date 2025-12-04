@@ -23,7 +23,7 @@ export const Drill = ({data}: DrillProps) => {
           <Play/> Practice
         </Button>
         {
-          userRole && (
+          userRole === 'admin' && (
             <Button variant='secondary' className="w-full" onClick={() => router.push(`/drills/${data.id}`)}>
               <Edit/> Edit
             </Button>
