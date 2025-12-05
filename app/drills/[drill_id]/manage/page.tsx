@@ -22,7 +22,7 @@ export default async function DrillPage({ params }: HomePageProps) {
   const objections = await db.select().from(drillObjections).where(eq(drillObjections.drill_id, drill_id));
   
   return (
-    <div className="min-h-screen w-full p-8">
+    <div className="min-h-screen w-full p-8 flex flex-col">
       <Item className="mb-4 p-0">
         <ItemContent>
           <div className="flex gap-4">
@@ -40,7 +40,7 @@ export default async function DrillPage({ params }: HomePageProps) {
         <ItemFooter>
         </ItemFooter>
       </Item>
-      <Tabs defaultValue="edit" className="">
+      <Tabs defaultValue="edit" className="flex-grow flex flex-col">
         <DrillTabs/>
         <TabsContent value="edit" className="w-full px-12 py-6">
           <DrillForm drill={drill}/>
@@ -82,7 +82,15 @@ export default async function DrillPage({ params }: HomePageProps) {
             )
           }
         </TabsContent>
-        <TabsContent value="analytics">Analytics</TabsContent>
+        <TabsContent value="analytics" className="h-full">
+          {
+            true ? (
+              <p className="text-neutral-500 text-base text-center mt-28">No analytics data available for this drill yet.</p>
+            ) : (
+              <></>
+            )
+          }
+        </TabsContent>
       </Tabs>
     </div>
   );
