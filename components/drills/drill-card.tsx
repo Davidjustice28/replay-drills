@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation"
 interface DrillProps {
   data: DrillModel
 }
-export const Drill = ({data}: DrillProps) => {
+export const DrillCard = ({data}: DrillProps) => {
   const {userRole} = useAuthContext()
   const router = useRouter();
   return (
@@ -24,7 +24,7 @@ export const Drill = ({data}: DrillProps) => {
         </Button>
         {
           userRole === 'admin' && (
-            <Button variant='secondary' className="w-full" onClick={() => router.push(`/drills/${data.id}`)}>
+            <Button variant='secondary' className="w-full" onClick={() => router.push(`/drills/${data.id}/manage`)}>
               <Edit/> Edit
             </Button>
           )

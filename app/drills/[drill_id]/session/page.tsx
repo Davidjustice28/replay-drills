@@ -1,9 +1,10 @@
-import Image from "next/image";
+import { Item, ItemContent, ItemTitle, ItemDescription, ItemActions } from "@/components/ui/item";
 
-export default function Home() {
+export default function DrillEditPage() {
+  
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <p>Drill session page</p>
+    <div className="min-h-screen w-full p-8">
+      Session
     </div>
   );
 }

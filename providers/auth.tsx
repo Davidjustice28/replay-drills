@@ -15,7 +15,7 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Hard-coded now; later read from Clerk
   const [organizationId] = useState("92e450cb-2764-450e-9f8e-d2473a4ce204")
-  const [userRole] = useState("member")
+  const [userRole] = useState("admin")
 
   return (
     <AuthContext.Provider value={{ organizationId, userRole }}>
