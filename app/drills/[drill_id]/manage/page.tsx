@@ -11,6 +11,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/drills/back-button";
 import { DrillTabs } from "@/components/drills/drill-tabs";
+import { organizationId, userRole } from "@/lib/constants";
+import { deleteDrill } from "@/components/drills/actions";
 
 interface HomePageProps {
   params: Promise<{ drill_id: string; }>
@@ -19,14 +21,14 @@ interface HomePageProps {
 export default async function DrillPage({ params }: HomePageProps) {
   const {drill_id} = await params
   const drill = (await db.select().from(drills).where(eq(drills.id, drill_id)))[0]
-  const objections = await db.select().from(drillObjections).where(eq(drillObjections.drill_id, drill_id));
+  const objections = await db.select().from(drillObjections).where(eq(drillObjections.drill_id, drill_id)).orderBy(drillObjections.position);
   
   return (
     <div className="min-h-screen w-full p-8 flex flex-col">
       <Item className="mb-4 p-0">
         <ItemContent>
           <div className="flex gap-4">
-            <BackButton/>
+            <BackButton redirectPath="/drills"/>
             <div>
               <ItemTitle className="text-3xl font-bold text-neutral-950">
                 {drill.title}
@@ -71,14 +73,28 @@ export default async function DrillPage({ params }: HomePageProps) {
                   objections.map((objection, i) => {
                     return (
                       <EditableObjection 
+                        drill_id={drill_id}
                         key={`objection-${i}`} 
                         data={objection} 
-                        position={i + 1}
+                        position={objection.position}
                       />
                     )
                   })
                 }
               </div>
+            )
+          }
+
+          {
+            userRole === 'admin' && (
+              <form action={deleteDrill}>
+                <input type="hidden" name="id" value={drill_id}/>
+                <input type="hidden" name="organization_id" value={organizationId}/>
+
+                <Button variant='destructive' className=" mt-8 bg-neutral-300 hover:bg-red-600 text-white" type="submit">
+                  Delete Drill
+                </Button>
+              </form>
             )
           }
         </TabsContent>

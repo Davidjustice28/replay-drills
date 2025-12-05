@@ -7,14 +7,14 @@ import {
   ItemTitle,
 } from "@/components/ui/item"
 import { db } from "@/db/drizzle";
-import { eq } from "drizzle-orm";
+import { and, eq, not } from "drizzle-orm";
 import { drills } from "@/db/schema";
 import { organizationId } from "@/lib/constants";
 import { NewDrillButton } from "@/components/drills/new-drill-button";
 
 export default async function DrillsPage() {
 
-  const organization_drills = await db.select().from(drills).where(eq(drills.organization_id, organizationId));
+  const organization_drills = await db.select().from(drills).where(and(not(eq(drills.archived, true)), eq(drills.organization_id, organizationId)))
 
   return (
     <div className="min-h-screen w-full p-8">

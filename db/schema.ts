@@ -1,4 +1,4 @@
-import { pgTable, text, varchar, integer, timestamp, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, uuid, boolean } from "drizzle-orm/pg-core";
 
 
 export const organizations = pgTable("organizations", {
@@ -26,6 +26,7 @@ export const drills = pgTable("drills", {
   description: text("description").notNull(),
   date_created: timestamp("date_created").notNull().defaultNow(),
   last_updated: timestamp("last_updated").notNull().defaultNow(),
+  archived: boolean().default(false)
 });
 
 export const drillSessions = pgTable("drill_sessions", {

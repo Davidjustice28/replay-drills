@@ -1,0 +1,1 @@
+ALTER TABLE "drills" ADD COLUMN "archived" boolean DEFAULT false;

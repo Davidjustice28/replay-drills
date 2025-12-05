@@ -13,7 +13,7 @@ export const DrillCard = ({data}: DrillProps) => {
   const {userRole} = useAuthContext()
   const router = useRouter();
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-sm flex flex-col justify-between">
       <CardHeader>
         <CardTitle className="line-clamp-1">{data.title}</CardTitle>
         <CardDescription className="line-clamp-3">{data.description}</CardDescription>
