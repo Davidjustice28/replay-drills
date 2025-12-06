@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from "@/db/drizzle"
-import { drillObjections, drills } from "@/db/schema"
+import { drillObjections, drills, drillSessions } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
 import { revalidatePath } from "next/cache";
 import { redirect } from 'next/navigation';
@@ -100,4 +100,17 @@ export const deleteObjection = async (formData: FormData) => {
     }
   }
   revalidatePath(`/drills/${drill_id}/manage`)
+}
+
+export const createDrillSession = async (formData: FormData) => {
+  const drill_id = formData.get('drill_id') as string | null
+  const user_id = formData.get('user_id') as string | null
+  if (!drill_id || !user_id) throw new Error('Drill Session Creation Failed: Must have a user_id and drill_id')
+  const [session] = await db.insert(drillSessions).values([{
+    drill_id, 
+    user_id
+  }]).returning()
+  revalidatePath('/drills')
+
+  return session
 }
