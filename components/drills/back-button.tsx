@@ -1,12 +1,13 @@
 'use client'
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, X } from "lucide-react"
 import { Button } from "../ui/button"
 import { useRouter } from "next/navigation"
 
 interface ButtonProps {
   redirectPath?: string
+  type?: 'x' | 'arrow'
 }
-export const BackButton = ({redirectPath}: ButtonProps) => {
+export const BackButton = ({redirectPath, type}: ButtonProps) => {
   const router = useRouter()
   return (
     <Button variant='ghost' size='icon-lg' onClick={() => {
@@ -16,7 +17,7 @@ export const BackButton = ({redirectPath}: ButtonProps) => {
         router.back()
       }
     }}>
-      <ArrowLeft/>
+      {type === 'x' ? <X className="text-neutral-500 text-xs"/> :  <ArrowLeft/>}
     </Button>
   )
 }

@@ -1,3 +1,5 @@
+import { GeneratedAudioFile } from "ai";
+
 // data models
 export interface OrganizationModel {
   id: string;
@@ -44,4 +46,10 @@ export interface DrillObjectionAnswerModel {
   drill_session_id: string;
   drill_objection_id: string;
   answer: string;
+}
+
+
+export type ObjectionWithVoiceover = DrillObjectionModel & {
+  user_response: string, 
+  ai_audio: {base64: string, mediaType: string}
 }

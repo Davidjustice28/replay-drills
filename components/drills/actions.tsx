@@ -5,6 +5,11 @@ import { drillObjections, drills, drillSessions } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
 import { revalidatePath } from "next/cache";
 import { redirect } from 'next/navigation';
+import { GeneratedAudioFile, experimental_generateSpeech as generateSpeech } from 'ai';
+import { openai } from '@ai-sdk/openai';
+import { DrillObjectionModel, ObjectionWithVoiceover } from "@/lib/types";
+import { experimental_transcribe } from 'ai'
+
 
 export const updateDrill = async (formData: FormData) => {
   const id = formData.get('id') as string | null
@@ -113,4 +118,42 @@ export const createDrillSession = async (formData: FormData) => {
   revalidatePath('/drills')
 
   return session
+}
+
+export const generateObjectionVoiceovers = async (objections: DrillObjectionModel[]) => {
+  const objectionsWithAudio: Array<ObjectionWithVoiceover> = []
+  for (const objection of objections) {
+    const {audio} = await generateSpeech({ 
+      model: openai.speech('tts-1'),
+      text: objection.objection,
+      voice: 'alloy',
+    });
+
+    objectionsWithAudio.push({
+      ...objection,
+      user_response: '',
+      ai_audio: {base64: audio.base64, mediaType: audio.mediaType}
+    })
+  }
+
+  return objectionsWithAudio
+}
+
+export const transcribeAudio = async (formData: FormData) => {
+  const file = formData.get("file") as File;
+
+  if (!file) {
+    console.log('Transcription failed: Missing file')
+    return null
+  }
+  try {
+    const result = await experimental_transcribe({
+      model: openai.transcription('gpt-4o-mini-transcribe'),
+      audio: await file.arrayBuffer(),
+    });
+    return result.text
+  } catch (e) {
+    console.log('Transcription failed: ', e)
+    return null
+  }
 }
