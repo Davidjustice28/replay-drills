@@ -1,0 +1,1 @@
+ALTER TABLE "drill_objection_answers" ALTER COLUMN "answer" SET DATA TYPE text;

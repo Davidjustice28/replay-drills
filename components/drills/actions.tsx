@@ -1,14 +1,15 @@
 'use server'
 
 import { db } from "@/db/drizzle"
-import { drillObjections, drills, drillSessions } from "@/db/schema"
+import { drillObjectionAnswers, drillObjections, drills, drillSessions } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
 import { revalidatePath } from "next/cache";
 import { redirect } from 'next/navigation';
-import { GeneratedAudioFile, experimental_generateSpeech as generateSpeech } from 'ai';
+import { generateObject, experimental_generateSpeech as generateSpeech, jsonSchema } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { DrillObjectionModel, ObjectionWithVoiceover } from "@/lib/types";
 import { experimental_transcribe } from 'ai'
+import { LanguageModelV2 } from "@ai-sdk/provider";
 
 
 export const updateDrill = async (formData: FormData) => {
@@ -140,12 +141,14 @@ export const generateObjectionVoiceovers = async (objections: DrillObjectionMode
 }
 
 export const transcribeAudio = async (formData: FormData) => {
-  const file = formData.get("file") as File;
+  const base64 = formData.get("base64") as string;
 
-  if (!file) {
-    console.log('Transcription failed: Missing file')
+  if (!base64) {
+    console.log('Transcription failed: Missing base64')
     return null
   }
+  const buffer = Buffer.from(base64, 'base64')
+  const file = new File([buffer], 'objection_response.wav', {type: 'audio/wav'})
   try {
     const result = await experimental_transcribe({
       model: openai.transcription('gpt-4o-mini-transcribe'),
@@ -156,4 +159,96 @@ export const transcribeAudio = async (formData: FormData) => {
     console.log('Transcription failed: ', e)
     return null
   }
+}
+
+export const generateSessionResult = async (formData: FormData) => {
+  const data: Omit<ObjectionWithVoiceover,'ai_audio'>[] = Array.from(formData
+    .entries()
+    .filter(([key, _value]) => key.startsWith('objection-'))
+    .map(([_key, value]) => JSON.parse(value as string)))
+  
+  const user_id = formData.get('user_id') as string | null
+  const drill_session_id = formData.get('session_id') as string | null
+  if (!user_id || !drill_session_id) {
+    console.error('Session Result Generation Failed: Missing required fields user_id and session_id')
+    return null
+  }
+  const { object } = await generateObject<any>({
+    model: openai('gpt-5-mini'),
+    schema: jsonSchema({
+      type: 'object',
+      properties: {
+        results: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              score: { type: 'number' },
+            },
+            required: ['id', 'score'],
+          },
+        }
+      }
+    }),
+    system: `
+      You're a sales coach grading trainee's responses to common customer objections.
+      You will be given a list objections, each with the following schema:
+
+      {
+        id: string;
+        drill_id: string;
+        position: number;
+        objection: string;
+        ideal_response: string;
+        user_response: string;
+      }
+
+      Your job is to grade the user's response to each objection on a scale from 0 - 10 using the following guidelines:
+
+      - 0 being no answer given and 10 being a great response as well as it being almost identical to the ideal_response provided
+      - Bad responses should be between 1 - 5
+      - Good responses should be between 6 - 8
+      - Great responses should be 9 or 10
+
+      Your response should be a JSON response in the following structure
+
+      {
+        "results": [
+          {
+            "id": string,
+            "score": number
+          }
+        ]
+      }
+    `,
+    prompt: `
+      Here is the list of objections with the users answers:
+
+      ${JSON.stringify(data)}
+
+    `,
+  });
+  const {results} = object as {results: Array<{id: string; score: number;}>}
+  const total_score = Math.round(results.reduce((sum, curr) => sum + curr.score, 0) / data.length)
+  const [{date_started}] = await db.select({date_started: drillSessions.date_started, id: drillSessions.id}).from(drillSessions).where(eq(drillSessions.id, drill_session_id))
+  const now = new Date()
+  const duration = now.getTime() - date_started.getTime()
+  await db.update(drillSessions).set({score: total_score, duration, date_completed: now}).where(eq(drillSessions.id, drill_session_id))
+  const answers = await db.insert(drillObjectionAnswers).values(
+    results.map(objectionResult => {
+      const objectionData = data.find(d => d.id === objectionResult.id)!;
+      return {
+        user_id,
+        drill_session_id,
+        drill_objection_id: objectionData.id,
+        answer: objectionData.user_response,
+        score: objectionResult.score
+      }
+    })
+  ).returning()
+  return {
+    duration,
+    total_score,
+    answers: answers.map(a => ({...a, objection: data.find(d => d.id === a.drill_objection_id)!}))}
 }

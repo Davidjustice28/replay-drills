@@ -36,6 +36,7 @@ export const drillSessions = pgTable("drill_sessions", {
   date_completed: timestamp("date_completed"),
   duration: integer("duration"),
   user_id: uuid("user_id").notNull().references(() => users.id),
+  score: integer().notNull().default(0)
 });
 
 export const drillObjections = pgTable("drill_objections", {
@@ -54,5 +55,7 @@ export const drillObjectionAnswers = pgTable("drill_objection_answers", {
   drill_objection_id: uuid("drill_objection_id")
     .notNull()
     .references(() => drillObjections.id),
-  answer: uuid("answer").notNull(),
+  answer: text("answer").notNull(),
+  user_id: uuid("user_id").notNull().references(() => users.id),
+  score: integer().notNull()
 });

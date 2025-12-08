@@ -29,6 +29,20 @@
       "when": 1764959849835,
       "tag": "0003_large_captain_america",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1765134043394,
+      "tag": "0004_low_spirit",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1765134701286,
+      "tag": "0005_hesitant_cannonball",
+      "breakpoints": true
     }
   ]
 }

@@ -31,6 +31,7 @@ export interface DrillSessionModel {
   date_completed: Date | null;
   duration: number | null;
   user_id: string;
+  score: number;
 }
 
 export interface DrillObjectionModel {
@@ -46,10 +47,26 @@ export interface DrillObjectionAnswerModel {
   drill_session_id: string;
   drill_objection_id: string;
   answer: string;
+  score: number;
+  user_id: string;
 }
 
 
 export type ObjectionWithVoiceover = DrillObjectionModel & {
   user_response: string, 
   ai_audio: {base64: string, mediaType: string}
+}
+
+export interface DrillSessionResult {
+  answers: {
+    id: string;
+    drill_session_id: string;
+    user_id: string;
+    score: number;
+    drill_objection_id: string;
+    answer: string;
+    objection: DrillObjectionModel
+  }[];
+  total_score: number;
+  duration: number;
 }
