@@ -1,20 +1,10 @@
 'use client'
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import {
-  XAxis, YAxis, Tooltip, ResponsiveContainer,
-  BarChart,
-  Bar,
-  CartesianGrid,
-} from "recharts"
+import { ScoreDistribution as Distribution } from "@/lib/types";
+import { XAxis, YAxis, ResponsiveContainer, BarChart, Bar, CartesianGrid } from "recharts"
 
-export function ScoreDistribution() {
-  const data = [
-    { range: "0–20", value: 2 },
-    { range: "21–40", value: 10 },
-    { range: "41–60", value: 25 },
-    { range: "61–80", value: 60 },
-    { range: "81–100", value: 50 },
-  ]
+export function ScoreDistribution({distributionData}: {distributionData: Distribution}) {
+  const data = Object.entries(distributionData).map(([range, value]) => ({range, value}))
   return (
     <Card className="w-full md:w-1/2">
       <CardHeader>

@@ -84,6 +84,19 @@ export interface Performer {
   highestScore: number
 }
 
+export interface ScoreTrend {
+  date: string, 
+  score: number
+}
+
+export interface ScoreDistribution { 
+  "0–20": number,
+  "21–40": number,
+  "41–60": number,
+  "61–80": number,
+  "81–100": number,
+}
+
 export interface AnalyticsData {
   topPerformers: Performer[]
   worsePerformers: Performer[]
@@ -91,4 +104,7 @@ export interface AnalyticsData {
   averageScore: number
   averageDurationMs: number
   objectionStats: ObjectionStats[]
+  numOfSessions: number
+  trends: ScoreTrend[]
+  distribution: ScoreDistribution
 }

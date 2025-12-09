@@ -21,11 +21,11 @@ export const StatCard = ({label, description, isUp, stat}: StatCardProps) => {
       </CardHeader>
       <CardContent>
         <CardTitle className="text-3xl mb-2">{stat}</CardTitle>
-        <p className={(isUp ? "text-[#0D9488]" : "text-red-600")  + " text-xs"}>
+        {/* <p className={(isUp ? "text-[#0D9488]" : "text-red-600")  + " text-xs"}>
           {
             isUp ? <TrendingUp className="inline"/> : <TrendingDown className="inline"/>
           } {description}
-        </p>
+        </p> */}
       </CardContent>
     </Card>
   )
