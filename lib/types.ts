@@ -70,3 +70,25 @@ export interface DrillSessionResult {
   total_score: number;
   duration: number;
 }
+
+export interface ObjectionStats {
+  objection: string
+  attempts: number
+  averageScore: number
+}
+
+export interface Performer {
+  name: string
+  attempts: number
+  lastSessionMs: number
+  highestScore: number
+}
+
+export interface AnalyticsData {
+  topPerformers: Performer[]
+  worsePerformers: Performer[]
+  numOfLearners: number
+  averageScore: number
+  averageDurationMs: number
+  objectionStats: ObjectionStats[]
+}
