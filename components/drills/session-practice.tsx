@@ -1,13 +1,13 @@
 'use client'
-import { DrillModel, DrillSessionModel, DrillSessionResult, ObjectionWithVoiceover } from "@/lib/types"
+import { DrillModel, DrillObjectionModel, DrillSessionModel, DrillSessionResult, ObjectionWithVoiceover } from "@/lib/types"
 import { SessionStep } from "./session-step"
 import { Progress } from "@radix-ui/react-progress"
-import { Home, RotateCcw, Volume2 } from "lucide-react"
+import { Home, Play, Volume2 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { BackButton } from "./back-button"
 import { useEffect, useRef, useState } from "react"
 import { userId } from "@/lib/constants"
-import { generateSessionResult } from "./actions"
+import { generateObjectionVoiceover, generateSessionResult } from "./actions"
 import { ObjectionResponse } from "./objection-response"
 import { Button } from "../ui/button"
 import { useRouter } from "next/navigation"
@@ -16,43 +16,44 @@ import { PracticeAgainButton } from "./practice-again-button"
 interface SessionProps {
   drill: DrillModel
   session: DrillSessionModel
-  objections: ObjectionWithVoiceover[]
+  objections: DrillObjectionModel[]
 }
 export const PracticeSession = ({drill, session, objections}: SessionProps) => {
   const [step, setStep] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [userAnswers, setUserAnswers] = useState<Omit<ObjectionWithVoiceover,'ai_audio'>[]>([])
   const [result, setResult] = useState<DrillSessionResult>()
+  const [loading, setLoading] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
+  const voiceoverFormRef = useRef<HTMLFormElement>(null)
   const router = useRouter()
-  const playAiAudio = async () => {
-    setPlaying(true)
-    function base64ToUint8Array(base64: string) {
-      const binary = atob(base64);
-      return Uint8Array.from(binary, c => c.charCodeAt(0));
-    }
+  const [base64, setBase64] = useState('')
 
-    const bytes = base64ToUint8Array(objections[step].ai_audio.base64);
-    const blob = new Blob([bytes], { type: 'audio/mp3' });
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
+  const playAiAudio = async () => {
+    if (!base64 || playing) return
+    setPlaying(true)
+  
+    const binary = atob(base64)
+    const bytes = Uint8Array.from(binary, c => c.charCodeAt(0))
+    const blob = new Blob([bytes], { type: 'audio/mp3' })
+    const url = URL.createObjectURL(blob)
+    const audio = new Audio(url)
 
     audio.addEventListener("ended", () => {
       setPlaying(false)
     })
-
     audio.play()
   }
+
   useEffect(() => {
-    const handler = () => {
-      playAiAudio()
-      window.removeEventListener("click", handler)
-    };
-
-    window.addEventListener("click", handler, { once: true })
-
-    return () => window.removeEventListener("click", handler)
+    if (voiceoverFormRef.current) voiceoverFormRef.current.requestSubmit()
   }, [step])
+
+  useEffect(() => {
+    if (!playing) playAiAudio()
+  }, [base64])
+
+
   return (
     <div className="flex flex-col flex-grow">
       {
@@ -87,11 +88,19 @@ export const PracticeSession = ({drill, session, objections}: SessionProps) => {
                 <Home/>
                 Back to Drills
               </Button>
-              <PracticeAgainButton drill_id={drill.id}/>
+              <PracticeAgainButton drill_id={drill.id} user_id={userId}/>
             </div>
           </div>
         ) : (
           <div className="flex flex-col flex-grow">
+            <form ref={voiceoverFormRef} action={async (formData) => {
+              const voiceoverBase64 = await generateObjectionVoiceover(formData)
+              if (voiceoverBase64) {
+                setBase64(voiceoverBase64)
+              }
+            }}>
+              <input type="hidden" value={objections[step].id} name="objection_id"/>
+            </form>
             <CardHeader className="border-b-2 items-center flex flex-col py-5 relative">
               <div className="flex items-center justify-between min-w-[75%] max-w-4xl">
                 <div className="flex gap-4">
@@ -105,38 +114,61 @@ export const PracticeSession = ({drill, session, objections}: SessionProps) => {
                     </p>
                   </div>
                 </div>
-                {playing && (
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="relative w-6 h-6 flex items-center justify-center">
-                      <div className="absolute inset-0 border-2 border-blue-400 rounded-full pulse-ring"></div>
-                      <Volume2 className="w-4 h-4 text-blue-600 relative z-10" />
+                {
+                  base64 && (
+
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="relative w-6 h-6 flex items-center justify-center">
+                        {playing ? (
+                          <>
+                            <div className="absolute inset-0 border-2 border-blue-400 rounded-full pulse-ring"></div>
+                            <Volume2 className="w-4 h-4 text-blue-600 relative z-10" />
+                          </>
+                          ) : (
+                            <Button 
+                              onClick={() => playAiAudio()} 
+                              variant='ghost' 
+                              size='icon-lg'
+                            >
+                              <Play className="w-4 h-4 text-neutral-950"/>
+                            </Button>
+                          )
+                        }
+                      </div>
+                      <span className="text-xs text-gray-600 font-medium whitespace-nowrap w-20 text-center">{!playing ? 'Play Audio': 'AI Speaking'}</span>
                     </div>
-                    <span className="text-xs text-gray-600 font-medium whitespace-nowrap">AI Speaking</span>
-                  </div>
-                )}
+                  )
+                }
+                
               </div>
               <Progress value={20} className="w-full absolute -bottom-1 h-1" />
             </CardHeader>
             <div className="border-2 flex-grow flex items-center justify-center">
               <SessionStep
+                loading={loading}
                 objection={objections[step]}
                 onNextClick={(transcription) => {
-                  const {ai_audio,...obj} = objections[step]
+                  setBase64('')
+                  const obj = objections[step]
                   setUserAnswers(prev => [...prev, {...obj, user_response: transcription ?? ''}])
                   setStep(prev => prev + 1)
                 }}
                 lastStep={step + 1 === objections.length}
                 onFinish={(transcription) => {
-                  const {ai_audio,...obj} = objections[step]
+                  setBase64('')
+                  setLoading(true)
+                  const obj = objections[step]
                   const finalEntries = [...userAnswers, {...obj, user_response: transcription ?? ''}]
                   setUserAnswers(finalEntries)
                   if (formRef.current) formRef.current.requestSubmit()
+                    
                 }}
                 playingVoiceover={playing}
               />
             </div>
             <form ref={formRef} action={async (formData) => {
               const result = await generateSessionResult(formData)
+              setLoading(false)
               if (result) setResult(result)
             }}>
               <input type="hidden" value={userId} name={'user_id'}/>

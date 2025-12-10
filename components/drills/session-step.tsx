@@ -2,19 +2,21 @@
 import { Mic, ChevronRight } from "lucide-react"
 import { Button } from "../ui/button"
 import { Card, CardHeader, CardDescription, CardTitle, CardContent } from "../ui/card"
-import { ObjectionWithVoiceover } from "@/lib/types"
+import { DrillObjectionModel, ObjectionWithVoiceover } from "@/lib/types"
 import { useEffect, useRef, useState } from "react"
 import { useReactMediaRecorder } from "react-media-recorder";
 import { transcribeAudio } from "./actions"
+import { Spinner } from "../ui/spinner"
 
 interface StepProps {
-  objection: ObjectionWithVoiceover
+  objection: DrillObjectionModel
+  loading: boolean
   onNextClick: (transcription?: string) => void
   onFinish: (transcription?: string) => void
   lastStep?: boolean
   playingVoiceover: boolean
 }
-export const SessionStep = ({objection, onFinish, onNextClick, lastStep, playingVoiceover}: StepProps) => {
+export const SessionStep = ({objection, onFinish, onNextClick, lastStep, playingVoiceover, loading}: StepProps) => {
   const [transcription, setTranscription] = useState('')
   const formRef = useRef<HTMLFormElement>(null)
   const nextButtonRef = useRef<HTMLButtonElement>(null)
@@ -45,15 +47,6 @@ export const SessionStep = ({objection, onFinish, onNextClick, lastStep, playing
     setTranscription('')
     setUserBase64('')
   }, [objection])
-
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     if (transcription && nextButtonRef.current) {
-  //       nextButtonRef.current.click()
-  //     }
-  //   }, 3000);
-
-  // }, [transcription])
   
   return (
     <div className="gap-6 flex flex-col flex-grow items-center justify-center h-full w-full">
@@ -120,13 +113,21 @@ export const SessionStep = ({objection, onFinish, onNextClick, lastStep, playing
                 >Skip</Button>
               )
             }
+            
             <Button
               className="ml-auto"
               ref={nextButtonRef}
-              onClick={() => lastStep ? onFinish(transcription) : onNextClick(transcription)}
-              disabled={playingVoiceover && !lastStep}
+              onClick={() => {
+                if (lastStep) {
+                  onFinish(transcription)
+                } else {
+                  onNextClick(transcription)
+                }
+              }}
+              disabled={(playingVoiceover && !lastStep) || !transcription && !lastStep}
             >
-              {lastStep ? 'Finish Drill' : 'Next Objection'} <ChevronRight/>
+              {lastStep ? 'Finish Drill' : 'Next Objection'} 
+              {loading ? <Spinner /> : <ChevronRight/>}
             </Button>
           </div>
         </CardContent>

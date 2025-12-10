@@ -1,13 +1,7 @@
-import { generateObjectionVoiceovers } from "@/components/drills/actions";
-import { BackButton } from "@/components/drills/back-button";
 import { PracticeSession } from "@/components/drills/session-practice";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { db } from "@/db/drizzle";
 import { drillObjections, drills, drillSessions } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { ChevronRight, Mic, Volume2 } from "lucide-react";
 interface SessionProps {
   params: Promise<{ session_id: string; drill_id: string }>
 }
@@ -17,7 +11,6 @@ export default async function DrillSessionPage({ params }: SessionProps) {
   const session = (await db.select().from(drillSessions).where(eq(drillSessions.id, session_id)))[0]
   const drill = (await db.select().from(drills).where(eq(drills.id, drill_id)))[0]
   const objections = (await db.select().from(drillObjections).where(eq(drillObjections.drill_id, drill_id)))
-  const modifiedObjections = await generateObjectionVoiceovers(objections)
   return (
     <div className="min-h-screen w-full flex flex-col box-border">
       <style>
@@ -77,7 +70,7 @@ export default async function DrillSessionPage({ params }: SessionProps) {
       `}
       </style>
       <PracticeSession 
-        objections={modifiedObjections} 
+        objections={objections} 
         session={session} 
         drill={drill}
       />

@@ -7,9 +7,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from 'next/navigation';
 import { generateObject, experimental_generateSpeech as generateSpeech, jsonSchema } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { DrillObjectionModel, ObjectionWithVoiceover } from "@/lib/types";
+import { ObjectionWithVoiceover } from "@/lib/types";
 import { experimental_transcribe } from 'ai'
-import { LanguageModelV2 } from "@ai-sdk/provider";
 
 
 export const updateDrill = async (formData: FormData) => {
@@ -121,23 +120,22 @@ export const createDrillSession = async (formData: FormData) => {
   return session
 }
 
-export const generateObjectionVoiceovers = async (objections: DrillObjectionModel[]) => {
-  const objectionsWithAudio: Array<ObjectionWithVoiceover> = []
-  for (const objection of objections) {
+export const generateObjectionVoiceover = async (formData: FormData) => {
+  try {
+    const objection_id = formData.get('objection_id') as string | null
+    if (!objection_id) return null
+    const [objection] = await db.select().from(drillObjections).where(eq(drillObjections.id, objection_id))
     const {audio} = await generateSpeech({ 
       model: openai.speech('tts-1'),
       text: objection.objection,
       voice: 'alloy',
     });
-
-    objectionsWithAudio.push({
-      ...objection,
-      user_response: '',
-      ai_audio: {base64: audio.base64, mediaType: audio.mediaType}
-    })
+  
+    return audio.base64
+  } catch(e) {
+    console.log('Failed to generate ai voiceover for objection: ', e)
+    return null
   }
-
-  return objectionsWithAudio
 }
 
 export const transcribeAudio = async (formData: FormData) => {
@@ -252,3 +250,5 @@ export const generateSessionResult = async (formData: FormData) => {
     total_score,
     answers: answers.map(a => ({...a, objection: data.find(d => d.id === a.drill_objection_id)!}))}
 }
+
+
