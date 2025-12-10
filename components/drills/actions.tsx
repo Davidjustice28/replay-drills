@@ -78,7 +78,7 @@ export const updateObjection = async (formData: FormData) => {
 
   const objection = formData.get('objection') as string | null
   const ideal_response = formData.get('ideal_response') as string | null
-  if (!id || !ideal_response || !objection || Number.isNaN(position)) throw new Error('Objection Update Failed: Must have a objection and ideal response and id')
+  if (id === null || ideal_response === null || objection === null  || Number.isNaN(position)) throw new Error('Objection Update Failed: Must have a objection and ideal response and id')
   const [updatedObjection] = await db.update(drillObjections).set({
     objection,
     ideal_response,

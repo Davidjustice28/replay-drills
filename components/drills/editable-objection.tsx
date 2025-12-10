@@ -9,19 +9,19 @@ import { FieldGroup, FieldSet, Field, FieldLabel } from "../ui/field"
 import { Input } from "../ui/input"
 import { Textarea } from "../ui/textarea"
 import { DrillObjectionModel } from "@/lib/types"
-import { createObjection, deleteDrill, deleteObjection, updateObjection } from "./actions"
+import { createObjection, deleteObjection, updateObjection } from "./actions"
 import { useRouter } from "next/navigation"
 import { organizationId } from "@/lib/constants"
 
 interface ObjectionProps {
-  data?: DrillObjectionModel
+  data: DrillObjectionModel
   drill_id: string
   position: number
 }
 export const EditableObjection = ({data, position, drill_id}: ObjectionProps) => {
   const [isOpen, setIsOpen] = useState(false)
-  const [objection, setObjection] = useState(data?.objection)
-  const [idealResponse, setIdealResponse] = useState(data?.ideal_response)
+  const [objection, setObjection] = useState(data.objection)
+  const [idealResponse, setIdealResponse] = useState(data.ideal_response)
   const ref = useRef<HTMLFormElement>(null)
   const router = useRouter()
 
@@ -40,7 +40,7 @@ export const EditableObjection = ({data, position, drill_id}: ObjectionProps) =>
             </CardDescription>
             <CardAction>
               <form action={deleteObjection} onClick={e => e.stopPropagation()}>
-                <input type="hidden" name="id" value={data?.id} />
+                <input type="hidden" name="id" value={data.id} />
                 <input type="hidden" name="drill_id" value={drill_id} />
                 <Button variant='ghost' size='icon'>
                   <Trash className="text-red-600"/>
@@ -55,12 +55,12 @@ export const EditableObjection = ({data, position, drill_id}: ObjectionProps) =>
               if (data) {
                 await updateObjection(formdata)
               } 
-              // else {
-              //   const newObjection = await createObjection(formdata)
-              //   router.replace(`/drills/${newObjection.id}/manage`)
-              // }
+              else {
+                const newObjection = await createObjection(formdata)
+                router.replace(`/drills/${newObjection.id}/manage`)
+              }
             }}>
-              <input type="hidden" name="id" value={data?.id} />
+              <input type="hidden" name="id" value={data.id} />
               <input type="hidden" name="position" value={position} />
               <input type="hidden" name="drill_id" value={drill_id} />
               <FieldGroup>
