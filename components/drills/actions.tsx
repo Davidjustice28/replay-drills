@@ -58,16 +58,16 @@ export const createObjection = async (formData: FormData) => {
   const drill_id = formData.get('drill_id') as string | null
   const position = Number(formData.get('position') ?? '')
 
-  const objection = formData.get('objection') as string | null
-  const ideal_response = formData.get('ideal_response') as string | null
 
-  if (!drill_id || !objection || !ideal_response || Number.isNaN(position)) throw new Error('Objection Creation Failed: Must have a drill_id and objection and position and ideal response')
+  if (!drill_id || Number.isNaN(position)) throw new Error('Objection Creation Failed: Must have a drill_id and position')
   const [createdObjection] = await db.insert(drillObjections).values([{
-    ideal_response, 
-    objection,
+    ideal_response: '', 
+    objection: '',
     position,
     drill_id
   }]).returning()
+  revalidatePath(`/drills/${drill_id}/manage`)
+
   return createdObjection
 }
 
@@ -95,12 +95,13 @@ export const deleteObjection = async (formData: FormData) => {
   const items = await db.select({id: drillObjections.id, position: drillObjections.position}).from(drillObjections).where(eq(drillObjections.drill_id, drill_id))
   const idx = items.findIndex(item => item.id === id)
   items.splice(idx, 1)
+  await db.delete(drillObjectionAnswers).where(eq(drillObjectionAnswers.drill_objection_id, id))
   const result = await db.delete(drillObjections).where(and(eq(drillObjections.drill_id, drill_id), eq(drillObjections.id, id)))
   if (result.rowCount) {
     for (let i =0; i < items.length; i++) {
       const objection = items[i]
       await db.update(drillObjections).set({
-        position: i,
+        position: i + 1,
       }).where(eq(drillObjections.id, objection.id)).returning()
     }
   }

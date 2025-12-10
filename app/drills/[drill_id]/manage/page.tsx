@@ -1,4 +1,3 @@
-import { AddObjectionButton } from "@/components/drills/add-objection-button";
 import { EditableObjection } from "@/components/drills/editable-objection";
 import { Item, ItemContent, ItemTitle, ItemDescription, ItemFooter, ItemActions } from "@/components/ui/item";
 import { db } from "@/db/drizzle";
@@ -6,19 +5,16 @@ import { eq } from "drizzle-orm";
 import { drillObjections, drills } from "@/db/schema";
 import { Tabs, TabsContent } from "@radix-ui/react-tabs";
 import { DrillForm } from "@/components/drills/new-drill-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BackButton } from "@/components/drills/back-button";
 import { DrillTabs } from "@/components/drills/drill-tabs";
 import { organizationId, userRole } from "@/lib/constants";
-import { deleteDrill } from "@/components/drills/actions";
-import { StatCard } from "@/components/drills/analytics/stat-card";
-import { ObjectionPerformance } from "@/components/drills/analytics/objection-performance";
-import { PerformancesCard } from "@/components/drills/analytics/performances-card";
-import { ScoreDistribution } from "@/components/drills/analytics/score-distribution-chart";
-import { ScoreTrend } from "@/components/drills/analytics/score-trend-chart";
-import { Suspense } from "react";
+import { createObjection, deleteDrill } from "@/components/drills/actions";
 import { AnalyticsTab } from "@/components/drills/analytics/analytics-tab";
+import { DrillObjectionModel } from "@/lib/types";
+import { Plus } from "lucide-react";
+import { AddObjectionButton } from "@/components/drills/add-objection-button";
 
 interface HomePageProps {
   params: Promise<{ drill_id: string; }>
@@ -27,8 +23,9 @@ interface HomePageProps {
 export default async function DrillPage({ params }: HomePageProps) {
   const {drill_id} = await params
   const drill = (await db.select().from(drills).where(eq(drills.id, drill_id)))[0]
-  const objections = await db.select().from(drillObjections).where(eq(drillObjections.drill_id, drill_id)).orderBy(drillObjections.position);
-  
+  const items = await db.select().from(drillObjections).where(eq(drillObjections.drill_id, drill_id)).orderBy(drillObjections.position);
+  const objections: DrillObjectionModel[] = [...items]
+
   return (
     <div className="min-h-screen w-full p-8 flex flex-col">
       <Item className="mb-4 p-0">
@@ -60,7 +57,7 @@ export default async function DrillPage({ params }: HomePageProps) {
               </ItemDescription>
             </ItemContent>
             <ItemActions>
-              <AddObjectionButton/>
+              <AddObjectionButton drill_id={drill_id} position={objections.length + 1}/>
             </ItemActions>
           </Item>
           {
@@ -68,7 +65,7 @@ export default async function DrillPage({ params }: HomePageProps) {
               <Card className="bg-neutral-100/30 py-12">
                 <CardContent className=" items-center justify-center flex flex-col gap-4">
                   <p className="text-neutral-500 text-base">No objections added yet</p>
-                  <Button>Add Your First Objection</Button>
+                  <AddObjectionButton drill_id={drill_id} position={objections.length + 1} title="Add Your First Objection"/>
                 </CardContent>
               </Card>
             )

@@ -9,7 +9,7 @@ import { FieldGroup, FieldSet, Field, FieldLabel } from "../ui/field"
 import { Input } from "../ui/input"
 import { Textarea } from "../ui/textarea"
 import { DrillObjectionModel } from "@/lib/types"
-import { createObjection, updateObjection } from "./actions"
+import { createObjection, deleteDrill, deleteObjection, updateObjection } from "./actions"
 import { useRouter } from "next/navigation"
 import { organizationId } from "@/lib/constants"
 
@@ -39,9 +39,13 @@ export const EditableObjection = ({data, position, drill_id}: ObjectionProps) =>
               {objection}
             </CardDescription>
             <CardAction>
+              <form action={deleteObjection} onClick={e => e.stopPropagation()}>
+                <input type="hidden" name="id" value={data?.id} />
+                <input type="hidden" name="drill_id" value={drill_id} />
                 <Button variant='ghost' size='icon'>
                   <Trash className="text-red-600"/>
                 </Button>
+              </form>
             </CardAction>
           </CardHeader>
         </CollapsibleTrigger>
@@ -50,10 +54,11 @@ export const EditableObjection = ({data, position, drill_id}: ObjectionProps) =>
             <form className="my-4" ref={ref} action={async (formdata) => {
               if (data) {
                 await updateObjection(formdata)
-              } else {
-                const newObjection = await createObjection(formdata)
-                router.replace(`/drills/${newObjection.id}/manage`)
-              }
+              } 
+              // else {
+              //   const newObjection = await createObjection(formdata)
+              //   router.replace(`/drills/${newObjection.id}/manage`)
+              // }
             }}>
               <input type="hidden" name="id" value={data?.id} />
               <input type="hidden" name="position" value={position} />
